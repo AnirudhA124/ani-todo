@@ -1,0 +1,78 @@
+{
+  "name": "ani-todo",
+  "displayName": "ToDo",
+  "description": "Keeping track of stuff.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.101.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:ani-todo.helloWorld",
+    "onCommand:ani-todo.askQuestion",
+    "onCommand:ani-todo.refresh"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ani-todo.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "ani-todo.askQuestion",
+        "category": "ToDo",
+        "title": "Ask Question"
+      },
+      {
+        "command": "ani-todo.refresh",
+        "category": "ToDo",
+        "title": "Refresh"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack --config ./build/node-extension.webpack.config.js",
+    "watch": "concurrently \"rollup -c --bundleConfigAsCjs -w\" \"webpack --watch --config ./build/node-extension.webpack.config.js\"",
+    "package": "webpack --mode production --devtool hidden-source-map --config ./build/node-extension.webpack.config.js",
+    "test-compile": "tsc -p ./",
+    "test-watch": "tsc -watch -p ./",
+    "pretest": "npm run test-compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.3",
+    "@tsconfig/svelte": "^5.0.4",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.101.0",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.5.2",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.25.1",
+    "rollup": "^4.44.0",
+    "rollup-plugin-css-only": "^4.5.2",
+    "rollup-plugin-livereload": "^2.0.5",
+    "rollup-plugin-svelte": "^7.2.2",
+    "svelte": "^5.34.7",
+    "svelte-check": "^4.2.2",
+    "svelte-preprocess": "^6.0.3",
+    "ts-loader": "^9.5.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.7",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "sirv-cli": "^2.0.0"
+  }
+}
