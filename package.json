@@ -12,10 +12,32 @@
   "activationEvents": [
     "onCommand:ani-todo.helloWorld",
     "onCommand:ani-todo.askQuestion",
-    "onCommand:ani-todo.refresh"
+    "onCommand:ani-todo.refresh",
+    "onView:vstodo-sidebar",
+    "onCommand:ani-todo.addTodo"
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vstodo-sidebar-view",
+          "title": "VSTodo",
+          "icon": "media/checklist.svg"
+        }
+      ]
+    },
+    "views": {
+      "vstodo-sidebar-view": [
+        {
+          "type": "webview",
+          "id": "vstodo-sidebar",
+          "name": "VSTodo",
+          "icon": "media/checklist.svg",
+          "contextualTitle": "VSTodo"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "ani-todo.helloWorld",
@@ -30,6 +52,11 @@
         "command": "ani-todo.refresh",
         "category": "ToDo",
         "title": "Refresh"
+      },
+      {
+        "command": "ani-todo.addTodo",
+        "category": "ToDo",
+        "title": "Add Todo from Selection"
       }
     ]
   },
