@@ -63,6 +63,53 @@
 		}
 	}
 
+	// Send Data
+	// Send Data and auto-insert generated files
+async function sendDataToFlask(requirement: string) {
+	try {
+		const response = await fetch(`${apiBaseUrl}/receive-data`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ requirement }),
+		});
+
+		const result = await response.json();
+		console.log("📦 Server returned:", result);
+
+		// Check if Gemini response contains files
+		if (!result.files || result.files.length === 0) {
+			tsvscode.postMessage({
+				type: "onError",
+				value: "❌ No files received from server.",
+			});
+			return;
+		}
+
+		// Loop through each file and send to extension for creation
+		for (const file of result.files) {
+			tsvscode.postMessage({
+				type: "insertFile",
+				path: file.path,
+				content: file.content,
+			} as any);
+		}
+
+		tsvscode.postMessage({
+			type: "onInfo",
+			value: `✨ ${result.files.length} file(s) generated and sent for insertion.`,
+		});
+	} catch (error) {
+		console.error("❌ Error sending to Flask:", error);
+		tsvscode.postMessage({
+			type: "onError",
+			value: "❌ Could not send data to Flask server",
+		});
+	}
+}
+
+
 	async function toggleTodo(task: {
 		text: string;
 		completed: boolean;
@@ -168,13 +215,10 @@
 
 <button
 	on:click={() => {
-		tsvscode.postMessage({
-			type: "onError",
-			value: "Button Clicked",
-		});
+		sendDataToFlask(text);
 	}}
 >
-	Click Me
+	Click Me Send
 </button>
 
 <style>
