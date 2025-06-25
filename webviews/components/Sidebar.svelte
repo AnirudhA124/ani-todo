@@ -18,14 +18,56 @@
 		const result = await response.json();
 		if (result.todo) {
 			todos = [result.todo, ...todos];
-            tsvscode.postMessage({
-			type: "onInfo",
-			value: "Task Added.",
-		});
+			tsvscode.postMessage({
+				type: "onInfo",
+				value: "Task Added.",
+			});
 		}
 	}
 
-	async function toggleTodo(task: { text: string; completed: boolean; id?: string }) {
+	// Test function
+	async function test() {
+		try {
+			const response = await fetch(`${apiBaseUrl}/send-json`);
+			const data = await response.json();
+
+			console.log("Fetched file data:", data);
+
+			if (!data.files || data.files.length === 0) {
+				tsvscode.postMessage({
+					type: "onError",
+					value: "No files received from server.",
+				});
+				return;
+			}
+
+			// Loop through each file and send it to the extension to be created
+			for (const file of data.files) {
+				tsvscode.postMessage({
+					type: "insertFile",
+					path: file.path,
+					content: file.content,
+				} as any);
+			}
+
+			tsvscode.postMessage({
+				type: "onInfo",
+				value: `📁 ${data.files.length} file(s) sent to extension for insertion.`,
+			});
+		} catch (error) {
+			console.error("Error fetching JSON from /send-json:", error);
+			tsvscode.postMessage({
+				type: "onError",
+				value: "❌ Failed to fetch JSON from server.",
+			});
+		}
+	}
+
+	async function toggleTodo(task: {
+		text: string;
+		completed: boolean;
+		id?: string;
+	}) {
 		// Update locally first for immediate UI feedback
 		task.completed = !task.completed;
 		todos = [...todos]; // Trigger reactivity
@@ -80,6 +122,61 @@
 	});
 </script>
 
+<form
+	on:submit|preventDefault={async () => {
+		if (text.trim() !== "") {
+			await addTodo(text);
+			tsvscode.postMessage({
+				type: "onInfo",
+				value: "Task Added.",
+			});
+			text = "";
+		}
+	}}
+>
+	<input type="text" bind:value={text} placeholder="Add a new todo..." />
+	<button type="submit">Add</button>
+</form>
+
+<ul>
+	{#each todos as task (task.id)}
+		<li class={task.completed ? "completed" : ""}>
+			<button
+				class="todo-button"
+				on:click={() => toggleTodo(task)}
+				tabindex="0"
+				on:keydown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						e.preventDefault();
+						toggleTodo(task);
+					}
+				}}
+			>
+				{task.text}
+			</button>
+		</li>
+	{/each}
+</ul>
+
+<button
+	on:click={() => {
+		test();
+	}}
+>
+	Click Me Test
+</button>
+
+<button
+	on:click={() => {
+		tsvscode.postMessage({
+			type: "onError",
+			value: "Button Clicked",
+		});
+	}}
+>
+	Click Me
+</button>
+
 <style>
 	.completed {
 		text-decoration: line-through;
@@ -101,57 +198,3 @@
 		padding: 0;
 	}
 </style>
-
-<form
-	on:submit|preventDefault={async () => {
-		if (text.trim() !== "") {
-			await addTodo(text);
-            tsvscode.postMessage({
-			type: "onInfo",
-			value: "Task Added.",
-		});
-			text = "";
-		}
-	}}>
-	<input type="text" bind:value={text} placeholder="Add a new todo..." />
-	<button type="submit">Add</button>
-</form>
-
-<ul>
-	{#each todos as task (task.id)}
-		<li class={task.completed ? 'completed' : ''}>
-			<button
-				class="todo-button"
-				on:click={() => toggleTodo(task)}
-				tabindex="0"
-				on:keydown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-						toggleTodo(task);
-					}
-				}}>
-				{task.text}
-			</button>
-		</li>
-	{/each}
-</ul>
-
-<button
-	on:click={() => {
-		tsvscode.postMessage({
-			type: "onInfo",
-			value: "Button Clicked",
-		});
-	}}>
-	Click Me
-</button>
-
-<button
-	on:click={() => {
-		tsvscode.postMessage({
-			type: "onError",
-			value: "Button Clicked",
-		});
-	}}>
-	Click Me
-</button>
