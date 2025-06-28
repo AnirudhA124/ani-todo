@@ -1,58 +1,58 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-	let todos: Array<{ text: string; completed: boolean; id?: string }> = [];
 	let text = "";
+	let loading = false;
+	let resultText: string = "";
 
-	const apiBaseUrl = "http://localhost:5000"; // Flask backend
+	const apiBaseUrl = "https://extension-api-production-a281.up.railway.app/";
 
-	async function addTodo(t: string) {
-		const response = await fetch(`${apiBaseUrl}/todo`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({ text: t }),
-		});
-
-		const result = await response.json();
-		if (result.todo) {
-			todos = [result.todo, ...todos];
-			tsvscode.postMessage({
-				type: "onInfo",
-				value: "Task Added.",
-			});
-		}
+	function delay(ms: number) {
+		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 
-	// Send Data
-	// Send Data and auto-insert generated files
 	async function sendDataToFlask(requirement: string) {
+		loading = true;
+
+		// 🔶 Start progress bar
+		tsvscode.postMessage({
+			type: "startProgress",
+			title: "Sending to server...",
+		} as any);
+
 		try {
-			const response = await fetch(`${apiBaseUrl}/receive-data`, {
+			// 🔄 Start request and 2s delay in parallel
+			const fetchPromise = fetch(`${apiBaseUrl}/receive-data`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({ requirement }),
-			});
+			}).then((res) => res.json());
 
-			const result = await response.json();
-			console.log("📦 Server returned:", result);
+			const [result] = await Promise.all([fetchPromise, delay(2000)]);
 
-			// ✅ Step 1: Send dependencies list to extension (once)
-			if (
-				result.dependencies &&
-				Array.isArray(result.dependencies) &&
-				result.dependencies.length > 0
-			) {
-				tsvscode.postMessage({
-					type: "installPythonLibs",
-					libs: result.dependencies,
-				} as any);
+			// ✅ Stop progress bar immediately after result
+			tsvscode.postMessage({ type: "endProgress" } as any);
+
+			// 📝 Show response in result pane
+			resultText = JSON.stringify(result, null, 2);
+
+			// 📦 Handle dependencies
+			if (Array.isArray(result.dependencies)) {
+				if (result.dependencies.length > 0) {
+					tsvscode.postMessage({
+						type: "installPythonLibs",
+						libs: result.dependencies,
+					} as any);
+				} else {
+					tsvscode.postMessage({
+						type: "onInfo",
+						value: "✅ No libraries needed.",
+					} as any);
+				}
 			}
 
-			// ✅ Step 2: Handle generated files
-			if (!result.files || result.files.length === 0) {
+			// 📁 Handle file insertion
+			if (!Array.isArray(result.files) || result.files.length === 0) {
 				tsvscode.postMessage({
 					type: "onError",
 					value: "❌ No files received from server.",
@@ -67,35 +67,54 @@
 					content: file.content,
 				} as any);
 			}
+
+			tsvscode.postMessage({
+				type: "onInfo",
+				value: `✅ ${result.files.length} file(s) inserted successfully!`,
+			});
 		} catch (error) {
-			console.error("❌ Error sending to Flask:", error);
+			console.error("Fetch error:", error);
 			tsvscode.postMessage({
 				type: "onError",
 				value: "❌ Could not send data to Flask server",
 			});
+			// ⛔ If request fails, also stop progress to avoid hanging
+			tsvscode.postMessage({ type: "endProgress" } as any);
+		} finally {
+			loading = false;
 		}
 	}
 </script>
 
 <div class="text_container">
 	<div class="chat_container">
+		<div class="result">
+			<pre>{resultText}</pre>
+		</div>
 		<div class="input_box">
 			<input
 				type="text"
 				bind:value={text}
 				placeholder="Say something..."
+				disabled={loading}
 			/>
 			<div class="icons">
 				<span title="Attachment">📎</span>
 				<span title="Emoji">😊</span>
-				<span title="Send" on:click={() => sendDataToFlask(text)}>➤</span>
-
+				<span title="Send" on:click={() => sendDataToFlask(text)}
+					>➤</span
+				>
 			</div>
 		</div>
 	</div>
 </div>
 
 <style>
+	.result {
+		position: absolute;
+		top: 10px;
+		width: 100%;
+	}
 	.text_container {
 		height: 100vh;
 		width: 100vw;
@@ -130,5 +149,12 @@
 		font-size: 1.2rem;
 		color: #555;
 		cursor: pointer;
+	}
+
+	.loading {
+		margin-top: 10px;
+		font-size: 0.95rem;
+		color: #555;
+		text-align: center;
 	}
 </style>

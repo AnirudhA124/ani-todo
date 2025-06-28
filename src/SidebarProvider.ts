@@ -20,6 +20,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     };
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+    let shouldEndProgress = false;
 
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
@@ -101,16 +102,22 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           }
 
           const notInstalled: string[] = [];
+          const installed: string[] = [];
 
-          // Check which libraries are not installed
           for (const lib of libs) {
             try {
-              cp.execSync(`python -c "import ${lib}"`);
-              console.log(`✅ ${lib} already installed`);
+              // Run Python check (you can use `py` instead of `python` on Windows if needed)
+              cp.execSync(`python -c "import ${lib}"`, { stdio: "ignore" });
+              installed.push(lib);
+              console.log(`✅ Already installed: ${lib}`);
             } catch {
               notInstalled.push(lib);
+              console.log(`🔍 Not installed: ${lib}`);
             }
           }
+
+          // ✅ Log the summary to output
+          console.log(`📋 Checked Python dependencies:\n  ✅ Installed: ${installed.join(", ") || "None"}\n  ❌ Missing: ${notInstalled.join(", ") || "None"}`);
 
           if (notInstalled.length === 0) {
             vscode.window.showInformationMessage("✅ All required Python libraries are already installed.");
@@ -118,7 +125,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           }
 
           const confirm = await vscode.window.showWarningMessage(
-            `📦 The following Python libraries are missing: ${notInstalled.join(", ")}. Install them now?`,
+            `📦 The following Python libraries are missing: ${notInstalled.join(", ")}.\nDo you want to install them now?`,
             "Yes",
             "No"
           );
@@ -128,11 +135,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             return;
           }
 
-          // Show progress while installing
+          // 🔄 Install with progress
           await vscode.window.withProgress(
             {
               location: vscode.ProgressLocation.Notification,
-              title: "📥 Installing Python libraries...",
+              title: "📥 Installing missing Python libraries...",
               cancellable: false,
             },
             async (progress) => {
@@ -153,15 +160,55 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                   vscode.window.showErrorMessage(`❌ Failed to install ${lib}`);
                 }
 
-                // Optional delay for smoother visual progress
-                await new Promise((resolve) => setTimeout(resolve, 300));
+                await new Promise((resolve) => setTimeout(resolve, 300)); // smooth progress
               }
             }
           );
 
-          vscode.window.showInformationMessage("✅ Finished installing missing libraries.");
+          vscode.window.showInformationMessage("✅ Finished installing all missing Python libraries.");
           break;
         }
+
+        case "startProgress": {
+
+          vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: data.title || "Processing...",
+              cancellable: false,
+            },
+            async (progress) => {
+              let percent = 0;
+
+              const interval = setInterval(() => {
+                if (percent < 90) {
+                  percent += 10;
+                  progress.report({
+                    increment: 10,
+                    message: `${percent}%`,
+                  });
+                }
+              }, 200);
+
+              // Wait for flag to become true
+              while (!shouldEndProgress) {
+                await new Promise((r) => setTimeout(r, 100));
+              }
+
+              clearInterval(interval);
+              progress.report({ increment: 10, message: `✅ Done` });
+              await new Promise((r) => setTimeout(r, 500));
+            }
+          );
+
+          break;
+        }
+
+        case "endProgress": {
+          shouldEndProgress = true;
+          break;
+        }
+
 
       }
     });
