@@ -15,6 +15,14 @@
 	}
 
 	async function sendDataToFlask(requirement: string) {
+		if (!requirement.trim()) {
+			tsvscode.postMessage({
+				type: "onError",
+				value: "Requirement text box is empty.",
+			});
+			return;
+		}
+
 		loading = true;
 
 		// 🔶 Start progress bar
