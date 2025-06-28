@@ -23,7 +23,7 @@
         {
           "id": "vstodo-sidebar-view",
           "title": "VSTodo",
-          "icon": "media/checklist.svg"
+          "icon": "media/checklist.png"
         }
       ]
     },
@@ -33,7 +33,7 @@
           "type": "webview",
           "id": "vstodo-sidebar",
           "name": "VSTodo",
-          "icon": "media/checklist.svg",
+          "icon": "media/checklist.png",
           "contextualTitle": "VSTodo"
         }
       ]
