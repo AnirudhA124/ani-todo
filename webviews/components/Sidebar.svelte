@@ -1,4 +1,9 @@
 <script lang="ts">
+	let selectedModel: string = "ChatGPT"; // default
+	let showDropdown = false;
+
+	const models = ["ChatGPT", "Claude", "Gemini", "Llama"];
+
 	let text = "";
 	let loading = false;
 	let resultText: string = "";
@@ -87,62 +92,83 @@
 </script>
 
 <div class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-icon">O2</div>
-            <span>Octavian</span>
-        </div>
-        
-        <div class="sidebar-content">
-            <div class="chat-messages" id="chatMessages">
-                <div class="empty-state">
-                    <div class="empty-state-icon">🤖</div>
-                    <div>Start a conversation with Octavian</div>
-                    <div style="margin-top: 8px; font-size: 11px; opacity: 0.7;">
-                        
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="input-container">
-            <div class="input-actions">
-                <div class="tools-dropdown">
-                    <div class="tools-section" >
-                        <span class="tools-icon"></span>
-                        <span>Model</span>
-                    </div>
-                    <div class="dropdown-content" id="toolsDropdown">
-                        <div class="dropdown-item" data-tool="code">Code Analysis</div>
-                        <div class="dropdown-item" data-tool="search">Web Search</div>
-                        <div class="dropdown-item" data-tool="debug">Debug Helper</div>
-                        <div class="dropdown-item" data-tool="docs">Documentation</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="input-wrapper">
-                <button class="input-button" title="Attach file" >
-                    <span class="attach-icon"></span>
-                </button>
-                
-                <textarea 
-                    class="text-input" 
-                    placeholder="Ask AI Assistant..." 
-                    rows="1"
-                    id="messageInput"
-					bind:value={text}
-                ></textarea>
-                
-                <button class="input-button" title="Clear">
-                    <span class="clear-icon"></span>
-                </button>
-                
-                <button class="input-button send-button" title="Send"  id="sendButton" on:click={()=>{sendDataToFlask(text)}}>
-                    <span class="send-icon"></span>
-                </button>
-            </div>
-        </div>
-    </div>
+	<div class="sidebar-header">
+		<div class="sidebar-icon">O2</div>
+		<span>Octavian</span>
+	</div>
+
+	<div class="sidebar-content">
+		<div class="chat-messages" id="chatMessages">
+			<div class="empty-state">
+				<div class="empty-state-icon">🤖</div>
+				<div>Start a conversation with Octavian</div>
+				<div
+					style="margin-top: 8px; font-size: 11px; opacity: 0.7;"
+				></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="input-container">
+		<!-- TOOLS DROPDOWN START -->
+		<div class="tools-dropdown">
+			<div
+				class="tools-section"
+				on:click={() => (showDropdown = !showDropdown)}
+			>
+				<span class="tools-icon"></span>
+				<span>{selectedModel}</span>
+			</div>
+
+			<div
+				class="dropdown-content {showDropdown ? 'active' : ''}"
+				id="toolsDropdown"
+			>
+				{#each models as model}
+					<div
+						class="dropdown-item"
+						on:click={() => {
+							selectedModel = model;
+							showDropdown = false;
+						}}
+					>
+						{model}
+					</div>
+				{/each}
+			</div>
+		</div>
+		<!-- TOOLS DROPDOWN END -->
+
+		<div class="input-wrapper">
+			<button class="input-button" title="Attach file">
+				<span class="attach-icon"></span>
+			</button>
+
+			<textarea
+				class="text-input"
+				placeholder="Ask AI Assistant..."
+				rows="1"
+				id="messageInput"
+				bind:value={text}
+			></textarea>
+
+			<button class="input-button" title="Clear">
+				<span class="clear-icon"></span>
+			</button>
+
+			<button
+				class="input-button send-button"
+				title="Send"
+				id="sendButton"
+				on:click={() => {
+					sendDataToFlask(text);
+				}}
+			>
+				<span class="send-icon"></span>
+			</button>
+		</div>
+	</div>
+</div>
 
 <style>
 	.sidebar {
