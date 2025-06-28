@@ -94,6 +94,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           break;
         } case "installPythonLibs": {
           const libs: string[] = data.libs;
+
           if (!libs || libs.length === 0) {
             vscode.window.showErrorMessage("❌ No libraries provided for installation.");
             return;
@@ -116,32 +117,51 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             return;
           }
 
-          // Ask user if they want to install all missing libs
           const confirm = await vscode.window.showWarningMessage(
             `📦 The following Python libraries are missing: ${notInstalled.join(", ")}. Install them now?`,
             "Yes",
             "No"
           );
 
-          if (confirm === "Yes") {
-            try {
-              const installCmd = `pip install ${notInstalled.join(" ")}`;
-              vscode.window.showInformationMessage(`📥 Installing: ${notInstalled.join(", ")}`);
-              cp.execSync(installCmd, { stdio: "inherit" });
-              vscode.window.showInformationMessage("✅ Successfully installed missing libraries.");
-            } catch (err) {
-              console.error("❌ Installation error:", err);
-              vscode.window.showErrorMessage("❌ Failed to install one or more libraries.");
-            }
-          } else {
+          if (confirm !== "Yes") {
             vscode.window.showInformationMessage("⏭️ Skipped library installation.");
+            return;
           }
 
+          // Show progress while installing
+          await vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: "📥 Installing Python libraries...",
+              cancellable: false,
+            },
+            async (progress) => {
+              const total = notInstalled.length;
+
+              for (let i = 0; i < total; i++) {
+                const lib = notInstalled[i];
+                progress.report({
+                  message: `Installing ${lib} (${i + 1}/${total})`,
+                  increment: 100 / total,
+                });
+
+                try {
+                  cp.execSync(`pip install ${lib}`, { stdio: "ignore" });
+                  console.log(`✅ Installed ${lib}`);
+                } catch (err) {
+                  console.error(`❌ Failed to install ${lib}:`, err);
+                  vscode.window.showErrorMessage(`❌ Failed to install ${lib}`);
+                }
+
+                // Optional delay for smoother visual progress
+                await new Promise((resolve) => setTimeout(resolve, 300));
+              }
+            }
+          );
+
+          vscode.window.showInformationMessage("✅ Finished installing missing libraries.");
           break;
         }
-
-
-
 
       }
     });
