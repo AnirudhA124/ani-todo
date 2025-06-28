@@ -1,7 +1,8 @@
 {
   "name": "ani-todo",
-  "displayName": "ToDo",
-  "description": "Keeping track of stuff.",
+  "displayName": "Octavian",
+  "publisher": "AnirudhA124",
+  "description": "Generating code...",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.101.0"
@@ -22,7 +23,7 @@
       "activitybar": [
         {
           "id": "vstodo-sidebar-view",
-          "title": "VSTodo",
+          "title": "Octavian",
           "icon": "media/checklist.png"
         }
       ]
@@ -32,9 +33,9 @@
         {
           "type": "webview",
           "id": "vstodo-sidebar",
-          "name": "VSTodo",
+          "name": "Octavian",
           "icon": "media/checklist.png",
-          "contextualTitle": "VSTodo"
+          "contextualTitle": "Octavian"
         }
       ]
     },
@@ -60,17 +61,20 @@
       }
     ]
   },
-  "scripts": {
-    "vscode:prepublish": "npm run package",
-    "compile": "webpack --config ./build/node-extension.webpack.config.js",
-    "watch": "concurrently \"rollup -c --bundleConfigAsCjs -w\" \"webpack --watch --config ./build/node-extension.webpack.config.js\"",
-    "package": "webpack --mode production --devtool hidden-source-map --config ./build/node-extension.webpack.config.js",
-    "test-compile": "tsc -p ./",
-    "test-watch": "tsc -watch -p ./",
-    "pretest": "npm run test-compile && npm run lint",
-    "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
-  },
+ "scripts": {
+  "vscode:prepublish": "npm run compile",
+  "compile": "webpack --config ./build/node-extension.webpack.config.js",
+  "watch": "concurrently \"rollup -c --bundleConfigAsCjs -w\" \"webpack --watch --config ./build/node-extension.webpack.config.js\"",
+  "package": "npx vsce package",
+  "publish": "npx vsce publish",
+  "login": "npx vsce login AnirudhA124",
+  "test-compile": "tsc -p ./",
+  "test-watch": "tsc -watch -p ./",
+  "pretest": "npm run test-compile && npm run lint",
+  "lint": "eslint src --ext ts",
+  "test": "node ./out/test/runTest.js"
+}
+,
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.1",
@@ -84,8 +88,11 @@
     "@typescript-eslint/parser": "^8.31.1",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^2.32.0",
     "concurrently": "^9.2.0",
+    "css-select": "^5.2.0",
     "eslint": "^9.25.1",
+    "npm-force-resolutions": "^0.0.10",
     "rollup": "^4.44.0",
     "rollup-plugin-css-only": "^4.5.2",
     "rollup-plugin-livereload": "^2.0.5",
@@ -101,6 +108,8 @@
   },
   "dependencies": {
     "child_process": "^1.0.2",
+    "install": "^0.13.0",
+    "npm": "^11.4.2",
     "sirv-cli": "^2.0.0"
   }
 }

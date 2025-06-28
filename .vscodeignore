@@ -1,8 +1,6 @@
 .vscode/**
 .vscode-test/**
-out/**
 node_modules/**
-src/**
 .gitignore
 .yarnrc
 webpack.config.js
@@ -12,3 +10,17 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+.vscode/**
+.vscode-test/**
+.vsc-extension-quickstart.md
+webpack.config.js
+.vscode-test.mjs
+**/*.ts
+**/*.map
+**/tsconfig.json
+**/eslint.config.mjs
+node_modules/**
+.gitignore
+.yarnrc
+test/**
+**/*.test.ts
