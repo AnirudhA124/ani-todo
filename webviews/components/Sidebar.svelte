@@ -88,9 +88,9 @@
 
 <div class="text_container">
 	<div class="chat_container">
-		<div class="result">
+		<!-- <div class="result">
 			<pre>{resultText}</pre>
-		</div>
+		</div> -->
 		<div class="input_box">
 			<input
 				type="text"
