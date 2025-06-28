@@ -5,6 +5,25 @@
 
 	const apiBaseUrl = "http://localhost:5000"; // Flask backend
 
+	async function addTodo(t: string) {
+		const response = await fetch(`${apiBaseUrl}/todo`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ text: t }),
+		});
+
+		const result = await response.json();
+		if (result.todo) {
+			todos = [result.todo, ...todos];
+			tsvscode.postMessage({
+				type: "onInfo",
+				value: "Task Added.",
+			});
+		}
+	}
+
 	// Send Data
 	// Send Data and auto-insert generated files
 	async function sendDataToFlask(requirement: string) {
@@ -58,7 +77,18 @@
 	}
 </script>
 
-<form>
+<form
+	on:submit|preventDefault={async () => {
+		if (text.trim() !== "") {
+			await addTodo(text);
+			tsvscode.postMessage({
+				type: "onInfo",
+				value: "Task Added.",
+			});
+			text = "";
+		}
+	}}
+>
 	<input type="text" bind:value={text} placeholder="Add a new todo..." />
 	<button
 		on:click={() => {
