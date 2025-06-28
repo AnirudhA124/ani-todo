@@ -77,46 +77,58 @@
 	}
 </script>
 
-<form
-	on:submit|preventDefault={async () => {
-		if (text.trim() !== "") {
-			await addTodo(text);
-			tsvscode.postMessage({
-				type: "onInfo",
-				value: "Task Added.",
-			});
-			text = "";
-		}
-	}}
->
-	<input type="text" bind:value={text} placeholder="Add a new todo..." />
-	<button
-		on:click={() => {
-			sendDataToFlask(text);
-		}}
-	>
-		Submit
-	</button>
-</form>
+<div class="text_container">
+	<div class="chat_container">
+		<div class="input_box">
+			<input
+				type="text"
+				bind:value={text}
+				placeholder="Say something..."
+			/>
+			<div class="icons">
+				<span title="Attachment">📎</span>
+				<span title="Emoji">😊</span>
+				<span title="Send" on:click={() => sendDataToFlask(text)}>➤</span>
+
+			</div>
+		</div>
+	</div>
+</div>
 
 <style>
-	.completed {
-		text-decoration: line-through;
-		opacity: 0.7;
+	.text_container {
+		height: 100vh;
+		width: 100vw;
+		display: flex;
+		flex-direction: column;
+		justify-content: end;
+	}
+	.chat_container {
+		bottom: 0;
+		box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
 	}
 
-	.todo-button {
-		all: unset;
+	.input_box {
+		display: flex;
+		align-items: center;
+		background: white;
+		border-radius: 25px;
+		padding: 10px 15px;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
+
+	input[type="text"] {
+		flex: 1;
+		border: none;
+		outline: none;
+		font-size: 1rem;
+		background: transparent;
+	}
+
+	.icons {
+		display: flex;
+		font-size: 1.2rem;
+		color: #555;
 		cursor: pointer;
-		text-align: center;
-		padding: 4px;
-	}
-
-	li {
-		margin-left: 20px;
-	}
-
-	ul {
-		padding: 0;
 	}
 </style>
