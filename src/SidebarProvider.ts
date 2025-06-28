@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { getNonce } from "./getNonce";
+import * as cp from "child_process";
 
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
@@ -91,7 +92,56 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           }
 
           break;
+        } case "installPythonLibs": {
+          const libs: string[] = data.libs;
+          if (!libs || libs.length === 0) {
+            vscode.window.showErrorMessage("❌ No libraries provided for installation.");
+            return;
+          }
+
+          const notInstalled: string[] = [];
+
+          // Check which libraries are not installed
+          for (const lib of libs) {
+            try {
+              cp.execSync(`python -c "import ${lib}"`);
+              console.log(`✅ ${lib} already installed`);
+            } catch {
+              notInstalled.push(lib);
+            }
+          }
+
+          if (notInstalled.length === 0) {
+            vscode.window.showInformationMessage("✅ All required Python libraries are already installed.");
+            return;
+          }
+
+          // Ask user if they want to install all missing libs
+          const confirm = await vscode.window.showWarningMessage(
+            `📦 The following Python libraries are missing: ${notInstalled.join(", ")}. Install them now?`,
+            "Yes",
+            "No"
+          );
+
+          if (confirm === "Yes") {
+            try {
+              const installCmd = `pip install ${notInstalled.join(" ")}`;
+              vscode.window.showInformationMessage(`📥 Installing: ${notInstalled.join(", ")}`);
+              cp.execSync(installCmd, { stdio: "inherit" });
+              vscode.window.showInformationMessage("✅ Successfully installed missing libraries.");
+            } catch (err) {
+              console.error("❌ Installation error:", err);
+              vscode.window.showErrorMessage("❌ Failed to install one or more libraries.");
+            }
+          } else {
+            vscode.window.showInformationMessage("⏭️ Skipped library installation.");
+          }
+
+          break;
         }
+
+
+
 
       }
     });

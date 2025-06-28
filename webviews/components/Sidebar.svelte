@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-
 	let todos: Array<{ text: string; completed: boolean; id?: string }> = [];
 	let text = "";
 
@@ -25,148 +24,57 @@
 		}
 	}
 
-	// Test function
-	async function test() {
+	// Send Data
+	// Send Data and auto-insert generated files
+	async function sendDataToFlask(requirement: string) {
 		try {
-			const response = await fetch(`${apiBaseUrl}/send-json`);
-			const data = await response.json();
+			const response = await fetch(`${apiBaseUrl}/receive-data`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ requirement }),
+			});
 
-			console.log("Fetched file data:", data);
+			const result = await response.json();
+			console.log("📦 Server returned:", result);
 
-			if (!data.files || data.files.length === 0) {
+			// ✅ Step 1: Send dependencies list to extension (once)
+			if (
+				result.dependencies &&
+				Array.isArray(result.dependencies) &&
+				result.dependencies.length > 0
+			) {
+				tsvscode.postMessage({
+					type: "installPythonLibs",
+					libs: result.dependencies,
+				} as any);
+			}
+
+			// ✅ Step 2: Handle generated files
+			if (!result.files || result.files.length === 0) {
 				tsvscode.postMessage({
 					type: "onError",
-					value: "No files received from server.",
+					value: "❌ No files received from server.",
 				});
 				return;
 			}
 
-			// Loop through each file and send it to the extension to be created
-			for (const file of data.files) {
+			for (const file of result.files) {
 				tsvscode.postMessage({
 					type: "insertFile",
 					path: file.path,
 					content: file.content,
 				} as any);
 			}
-
-			tsvscode.postMessage({
-				type: "onInfo",
-				value: `📁 ${data.files.length} file(s) sent to extension for insertion.`,
-			});
 		} catch (error) {
-			console.error("Error fetching JSON from /send-json:", error);
+			console.error("❌ Error sending to Flask:", error);
 			tsvscode.postMessage({
 				type: "onError",
-				value: "❌ Failed to fetch JSON from server.",
+				value: "❌ Could not send data to Flask server",
 			});
 		}
 	}
-
-	// Send Data
-	// Send Data and auto-insert generated files
-async function sendDataToFlask(requirement: string) {
-	try {
-		const response = await fetch(`${apiBaseUrl}/receive-data`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({ requirement }),
-		});
-
-		const result = await response.json();
-		console.log("📦 Server returned:", result);
-
-		// Check if Gemini response contains files
-		if (!result.files || result.files.length === 0) {
-			tsvscode.postMessage({
-				type: "onError",
-				value: "❌ No files received from server.",
-			});
-			return;
-		}
-
-		// Loop through each file and send to extension for creation
-		for (const file of result.files) {
-			tsvscode.postMessage({
-				type: "insertFile",
-				path: file.path,
-				content: file.content,
-			} as any);
-		}
-
-		tsvscode.postMessage({
-			type: "onInfo",
-			value: `✨ ${result.files.length} file(s) generated and sent for insertion.`,
-		});
-	} catch (error) {
-		console.error("❌ Error sending to Flask:", error);
-		tsvscode.postMessage({
-			type: "onError",
-			value: "❌ Could not send data to Flask server",
-		});
-	}
-}
-
-
-	async function toggleTodo(task: {
-		text: string;
-		completed: boolean;
-		id?: string;
-	}) {
-		// Update locally first for immediate UI feedback
-		task.completed = !task.completed;
-		todos = [...todos]; // Trigger reactivity
-
-		// Update on Firebase backend
-		try {
-			const response = await fetch(`${apiBaseUrl}/todo/${task.id}`, {
-				method: "PUT",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ completed: task.completed }),
-			});
-
-			if (!response.ok) {
-				// If backend update fails, revert the change
-				task.completed = !task.completed;
-				todos = [...todos];
-				console.error("Failed to update todo");
-			}
-		} catch (error) {
-			// If backend update fails, revert the change
-			task.completed = !task.completed;
-			todos = [...todos];
-			console.error("Error updating todo:", error);
-		}
-	}
-
-	onMount(async () => {
-		// Fetch existing todos
-		const response = await fetch(`${apiBaseUrl}/todo`);
-		const result = await response.json();
-		todos = result.todos;
-
-		// VS Code message listener
-		window.addEventListener("message", async (event) => {
-			const message = event.data;
-			console.log({ message });
-
-			if (message.value === "") {
-				tsvscode.postMessage({
-					type: "onInfo",
-					value: "No text selected",
-				});
-				return;
-			}
-
-			if (message.type === "new-todo") {
-				await addTodo(message.value);
-			}
-		});
-	});
 </script>
 
 <form
@@ -182,44 +90,14 @@ async function sendDataToFlask(requirement: string) {
 	}}
 >
 	<input type="text" bind:value={text} placeholder="Add a new todo..." />
-	<button type="submit">Add</button>
+	<button
+		on:click={() => {
+			sendDataToFlask(text);
+		}}
+	>
+		Submit
+	</button>
 </form>
-
-<ul>
-	{#each todos as task (task.id)}
-		<li class={task.completed ? "completed" : ""}>
-			<button
-				class="todo-button"
-				on:click={() => toggleTodo(task)}
-				tabindex="0"
-				on:keydown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-						toggleTodo(task);
-					}
-				}}
-			>
-				{task.text}
-			</button>
-		</li>
-	{/each}
-</ul>
-
-<button
-	on:click={() => {
-		test();
-	}}
->
-	Click Me Test
-</button>
-
-<button
-	on:click={() => {
-		sendDataToFlask(text);
-	}}
->
-	Click Me Send
-</button>
 
 <style>
 	.completed {

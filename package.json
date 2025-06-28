@@ -100,6 +100,7 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
+    "child_process": "^1.0.2",
     "sirv-cli": "^2.0.0"
   }
 }
