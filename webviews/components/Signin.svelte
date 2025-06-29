@@ -94,8 +94,23 @@
 					bind:value={password}
 					required
 				/>
-				<button type="button" class="password-toggle" on:click={togglePassword}>
-					{showPassword ? "🙈" : "👁️"}
+				<button
+					type="button"
+					class="password-toggle"
+					on:click={togglePassword}
+					aria-label="Toggle password visibility"
+				>
+					<svg
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+					>
+						<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+						<circle cx="12" cy="12" r="3" />
+					</svg>
 				</button>
 			</div>
 		</div>
@@ -108,7 +123,7 @@
 
 <style>
 	.login-container {
-		background-color: #2a2a2a;
+		background-color: #181818;
 		width: 100%;
 		max-width: 400px;
 		padding: 40px 30px;
@@ -159,6 +174,7 @@
 		transition: all 0.2s ease;
 		outline: none;
 		box-sizing: border-box;
+        
 	}
 
 	.form-input:focus {
@@ -210,8 +226,9 @@
 	}
 
 	.sign-in-button {
+        
 		width: 100%;
-		padding: 16px;
+		padding: 14px;
 		background-color: #e5e5e5;
 		color: #1a1a1a;
 		border: none;
