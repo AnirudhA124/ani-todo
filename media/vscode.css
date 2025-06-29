@@ -5,11 +5,12 @@
 }
 
 body {
-  background-color: #181818;
+  background-color: #2a2a2a;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   height: 100vh;
   display: flex;
   flex-direction: column;
   color: #cccccc;
   overflow: hidden;
+  justify-content: center;
 }

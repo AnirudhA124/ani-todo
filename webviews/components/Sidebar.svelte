@@ -1,4 +1,10 @@
 <script lang="ts">
+	import { createEventDispatcher } from "svelte";
+	const dispatch = createEventDispatcher();
+
+	function logout() {
+		dispatch("logout");
+	}
 	let selectedModel: string = "ChatGPT"; // default
 	let showDropdown = false;
 
@@ -8,7 +14,7 @@
 	let loading = false;
 	let resultText: string = "";
 
-	const apiBaseUrl = "https://extension-api-production-a281.up.railway.app/";
+	const apiBaseUrl = "http://127.0.0.1:5000/";
 
 	function delay(ms: number) {
 		return new Promise((resolve) => setTimeout(resolve, ms));
@@ -116,6 +122,14 @@
 			</div>
 		</div>
 	</div>
+	<div style="padding: 12px; border-top: 1px solid #2d2d30;">
+	<button
+		on:click={logout}
+		style="width: 100%; padding: 8px; background: #ff4c4c; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;"
+	>
+		Logout
+	</button>
+</div>
 
 	<div class="input-container">
 		<!-- TOOLS DROPDOWN START -->
