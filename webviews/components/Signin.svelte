@@ -1,51 +1,82 @@
 <script>
 	import { createEventDispatcher } from "svelte";
 	import { onMount } from "svelte";
-	
+
 	const dispatch = createEventDispatcher();
-	
+
 	let email = "";
 	let password = "";
 	let isLoading = false;
-	
-	// Add password toggle functionality
 	let showPassword = false;
-	
+
+	async function handleForgotPassword() {
+		if (!email.trim()) {
+			tsvscode.postMessage({
+				type: "onError",
+				value: "Please enter your email to reset password.",
+			});
+			return;
+		}
+
+		try {
+			const res = await fetch("https://extension-api-production-e194.up.railway.app/forgot-password", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ email: email.trim(), password: "" }),
+			});
+
+			const result = await res.json();
+			if (res.ok && result.success) {
+				tsvscode.postMessage({
+					type: "onInfo",
+					value: "✅ Password reset link generated! Check your email.",
+				});
+				console.log("Password reset link:", result.reset_link);
+			} else {
+				alert(result.detail || "⚠ Failed to reset password.");
+			}
+		} catch (err) {
+			console.error("Error sending reset request", err);
+			tsvscode.postMessage({
+				type: "onError",
+				value: "❌ Network error. Try again.",
+			});
+		}
+	}
+
 	function togglePassword() {
 		showPassword = !showPassword;
 	}
-	
+
 	async function handleSubmit(e) {
 		e.preventDefault();
-		
 		if (!email.trim() || !password.trim()) {
 			alert("Please fill in all fields");
 			return;
 		}
-		
+
 		isLoading = true;
-		
+
 		try {
-			console.log("Attempting login with:", { email: email.trim() }); // Debug log
-			
+			console.log("Attempting login with:", { email: email.trim() });
+
 			const response = await fetch("https://extension-api-production-e194.up.railway.app/login", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ 
-					email: email.trim(), 
-					password: password.trim() 
+				body: JSON.stringify({
+					email: email.trim(),
+					password: password.trim(),
 				}),
 			});
-			
-			console.log("Response status:", response.status); // Debug log
-			
+
 			const result = await response.json();
-			console.log("Response data:", result); // Debug log
-			
+			console.log("Response data:", result);
+
 			if (response.ok && result.success) {
-				// 🔁 Notify parent that login was successful
 				dispatch("loginSuccess", result);
 			} else {
 				alert(result.message || "❌ Invalid credentials.");
@@ -58,6 +89,7 @@
 		}
 	}
 </script>
+
 
 <div class="login-container">
 	<div class="login-header">
@@ -81,7 +113,11 @@
 		<div class="form-group">
 			<div class="password-header">
 				<label for="password">Password</label>
-				<button type="button" class="forgot-password" on:click={() => alert("Forgot password feature not implemented")}>
+				<button
+					type="button"
+					class="forgot-password"
+					on:click={handleForgotPassword}
+				>
 					Forgot password?
 				</button>
 			</div>
@@ -108,7 +144,9 @@
 						stroke="currentColor"
 						stroke-width="2"
 					>
-						<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+						<path
+							d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+						/>
 						<circle cx="12" cy="12" r="3" />
 					</svg>
 				</button>
@@ -174,7 +212,6 @@
 		transition: all 0.2s ease;
 		outline: none;
 		box-sizing: border-box;
-        
 	}
 
 	.form-input:focus {
@@ -226,7 +263,6 @@
 	}
 
 	.sign-in-button {
-        
 		width: 100%;
 		padding: 14px;
 		background-color: #e5e5e5;
@@ -260,11 +296,11 @@
 		.login-container {
 			padding: 30px 20px;
 		}
-		
+
 		.login-header h1 {
 			font-size: 28px;
 		}
-		
+
 		.form-input {
 			padding: 14px 16px;
 			font-size: 16px;
