@@ -28,7 +28,7 @@
 		try {
 			console.log("Attempting login with:", { email: email.trim() }); // Debug log
 			
-			const response = await fetch("http://127.0.0.1:5000/login", {
+			const response = await fetch("https://extension-api-production-e194.up.railway.app/login", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",

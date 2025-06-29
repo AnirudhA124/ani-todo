@@ -7,6 +7,7 @@
 	}
 	let selectedModel: string = "ChatGPT"; // default
 	let showDropdown = false;
+	let showUserDropdown = false; // New state for user dropdown
 
 	const models = ["ChatGPT", "Claude", "Gemini", "Llama"];
 
@@ -14,7 +15,7 @@
 	let loading = false;
 	let resultText: string = "";
 
-	const apiBaseUrl = "http://127.0.0.1:5000/";
+	const apiBaseUrl = "https://extension-api-production-e194.up.railway.app";
 
 	function delay(ms: number) {
 		return new Promise((resolve) => setTimeout(resolve, ms));
@@ -103,11 +104,41 @@
 			loading = false;
 		}
 	}
+
+	// Close dropdown when clicking outside
+	function handleClickOutside(event: MouseEvent) {
+		const target = event.target as HTMLElement;
+		if (!target.closest('.user-dropdown')) {
+			showUserDropdown = false;
+		}
+		if (!target.closest('.tools-dropdown')) {
+			showDropdown = false;
+		}
+	}
 </script>
+
+<svelte:window on:click={handleClickOutside} />
 
 <div class="sidebar">
 	<div class="sidebar-header">
-		<div class="sidebar-icon">O2</div>
+		<!-- User Dropdown -->
+		<div class="user-dropdown">
+			<div 
+				class="sidebar-icon" 
+				on:click|stopPropagation={() => (showUserDropdown = !showUserDropdown)}
+			>
+				O2
+			</div>
+			
+			<!-- User Dropdown Content -->
+			<div class="user-dropdown-content {showUserDropdown ? 'active' : ''}">
+				<div class="user-dropdown-item" on:click={logout}>
+					<span class="logout-icon">🚪</span>
+					Logout
+				</div>
+			</div>
+		</div>
+		
 		<span>Octavian</span>
 	</div>
 
@@ -122,21 +153,13 @@
 			</div>
 		</div>
 	</div>
-	<div style="padding: 12px; border-top: 1px solid #2d2d30;">
-	<button
-		on:click={logout}
-		style="width: 100%; padding: 8px; background: #ff4c4c; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;"
-	>
-		Logout
-	</button>
-</div>
 
 	<div class="input-container">
 		<!-- TOOLS DROPDOWN START -->
 		<div class="tools-dropdown">
 			<div
 				class="tools-section"
-				on:click={() => (showDropdown = !showDropdown)}
+				on:click|stopPropagation={() => (showDropdown = !showDropdown)}
 			>
 				<span class="tools-icon"></span>
 				<span>{selectedModel}</span>
@@ -213,6 +236,11 @@
 		font-size: 13px;
 		font-weight: 500;
 		color: #cccccc;
+		position: relative;
+	}
+
+	.user-dropdown {
+		position: relative;
 	}
 
 	.sidebar-icon {
@@ -225,6 +253,53 @@
 		justify-content: center;
 		font-size: 10px;
 		color: white;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.sidebar-icon:hover {
+		background-color: #005a9e;
+		transform: scale(1.05);
+	}
+
+	.user-dropdown-content {
+		display: none;
+		position: absolute;
+		top: 100%;
+		left: 0;
+		background-color: #3c3c3c;
+		border: 1px solid #464647;
+		border-radius: 4px;
+		padding: 4px;
+		margin-top: 4px;
+		min-width: 120px;
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+		z-index: 1000;
+	}
+
+	.user-dropdown-content.active {
+		display: block;
+	}
+
+	.user-dropdown-item {
+		padding: 8px 12px;
+		border-radius: 2px;
+		cursor: pointer;
+		transition: background-color 0.2s ease;
+		color: #cccccc;
+		font-size: 12px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.user-dropdown-item:hover {
+		background-color: #464647;
+		color: #ffffff;
+	}
+
+	.logout-icon {
+		font-size: 12px;
 	}
 
 	.sidebar-content {
@@ -353,11 +428,6 @@
 	.input-button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
-	}
-
-	.send-button {
-		background-color: #007acc;
-		color: white;
 	}
 
 	.send-button:hover:not(:disabled) {
